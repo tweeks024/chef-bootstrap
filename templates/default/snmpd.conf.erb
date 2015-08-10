@@ -1,0 +1,70 @@
+###############################################################################
+#
+# snmpd.conf:
+#   An example configuration file for configuring the ucd-snmp snmpd agent.
+#
+###############################################################################
+#
+# This file is intended to only be as a starting point.  Many more
+# configuration directives exist than are mentioned in this file.  For
+# full details, see the snmpd.conf(5) manual page.
+#
+# All lines beginning with a '#' are comments and are intended for you
+# to read.  All other lines are configuration commands for the agent.
+
+###############################################################################
+# Access Control
+###############################################################################
+
+# As shipped, the snmpd demon will only respond to queries on the
+# system mib group until this file is replaced or modified for
+# security purposes.  Examples are shown below about how to increase the
+# level of access.
+
+# By far, the most common question I get about the agent is "why won't
+# it work?", when really it should be "how do I configure the agent to
+# allow me to access it?"
+#
+# By default, the agent responds to the "public" community for read
+# only access, if run out of the box without any configuration file in
+# place.  The following examples show you other ways of configuring
+# the agent so that you can change the community names, and give
+# yourself write access to the mib tree as well.
+#
+# For more information, read the FAQ as well as the snmpd.conf(5)
+# manual page.
+
+####
+# First, map the community name "public" into a "security name"
+
+#       sec.name  source          community
+com2sec notConfigUser  default       someSNMPCommunity
+
+
+####
+# Second, map the security name into a group name:
+
+#       groupName      securityModel securityName
+group MyRWGroup v1         notConfigUser
+group MyRWGroup usm        notConfigUser
+group MyROGroup v1         notConfigUser
+group MyROGroup v2c        notConfigUser
+group MyROGroup usm        notConfigUser
+
+####
+# Third, create a view for us to let the group have rights to:
+
+# Make at least  snmpwalk -v 1 localhost -c public system fast again.
+#       name           incl/excl     subtree         mask(optional)
+view    all            included      .1              80
+
+####
+# Finally, grant the group read-only access to the systemview view.
+
+#       group          context sec.model sec.level prefix read   write  notif
+access MyROGroup ""      any       noauth    exact  all    none   none
+access MyRWGroup ""      any       noauth    exact  all    all    none
+
+
+dontLogTCPWrappersConnects yes
+
